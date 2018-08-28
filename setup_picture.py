@@ -3,14 +3,6 @@
 from gimpfu import *
 
 
-def resize_layer_width(layer, width):
-    pass
-
-
-def resize_layer_height(layer, width):
-    pass
-
-
 def setup_picture(image, drawable):
 
     if len(image.layers) == 1:
@@ -43,6 +35,21 @@ def setup_picture(image, drawable):
 
         if type(layer) is gimp.GroupLayer:
             
+
+            
+            #position the layer group to a 12 position
+            xoffset = (layer.offsets[0] % 12) % 12
+            yoffset = (layer.offsets[1] % 12) % 12
+            for sublayer in layer.children:
+                pdb.gimp_layer_resize(
+                    sublayer,
+                    sublayer.width + xoffset,
+                    sublayer.height + yoffset,
+                    xoffset,
+                    yoffset,
+                )
+
+            # resize if needed
             for sublayer in layer.children:
                 xdifftotwelve = (12 - layer.width % 12) % 12
                 ydifftotwelve = (12 - layer.height % 12) % 12
@@ -85,23 +92,12 @@ def setup_picture(image, drawable):
                         layer.offsets[1]
                     )
                 )
-            
-            #position the layer group to a 12 position
-            xoffset = (layer.offsets[0] % 12) % 12
-            yoffset = (layer.offsets[1] % 12) % 12
-            for sublayer in layer.children:
-                pdb.gimp_layer_resize(
-                    sublayer,
-                    sublayer.width + xoffset,
-                    sublayer.height + yoffset,
-                    xoffset,
-                    yoffset,
-                )
 
                 pdb.gimp_item_set_visible(sublayer, False)
 
             pdb.gimp_message(
-                "New layer pos after move: ({}, {}), position: ({}, {})".format(
+                "New layer {} pos after move: ({}, {}), position: ({}, {})".format(
+                    layer.name,
                     xoffset,
                     yoffset,
                     layer.offsets[0],
@@ -143,7 +139,8 @@ def setup_picture(image, drawable):
                 0,
             )
             pdb.gimp_message(
-                "New layer size: ({}, {}), position: ({}, {})".format(
+                "New layer {} size: ({}, {}), position: ({}, {})".format(
+                    layer.name,
                     layer.width,
                     layer.height,
                     layer.offsets[0],
@@ -151,7 +148,7 @@ def setup_picture(image, drawable):
                 )
             )
 
-
+            pdb.gimp_item_set_visible(layer, False)
 
         pdb.gimp_item_set_visible(layer, False)
 
@@ -179,24 +176,28 @@ def setup_picture(image, drawable):
             nimage = pdb.gimp_edit_paste_as_new_image()
             ndisplay = gimp.Display(nimage)
             gimp.displays_flush()
+
             # floating = pdb.gimp_edit_paste(nlayer)
-
             # pdb.gimp_sel_floating_anchor(floating)
-
             # nimage.add_layer(nlayer)
             # nlayer = layer.copy()
             # nlayer = gimp.Layer(nimage, layer.name, layer.width, layer.height, RGB_IMAGE, 100, NORMAL_MODE)
-
-
             # nimage.resize_to_layers()
-
-
             # ndisplay = pdb.gimp_display_new(nimage)
-            # pdb.plug_in_autocrop(1, nimage, nlayer)
-            # pdb.file_png_save(
-            #     nimage,
-            #     nlayer,
 
+            # pdb.file_png_save(
+            #     RUN_INTERACTIVE,
+            #     nimage,
+            #     nimage.layers[0],
+            #     layer.name,
+            #     layer.name,
+            #     False,
+            #     5,
+            #     False,
+            #     False,
+            #     False,
+            #     False,
+            #     False
             # )
 
     pdb.gimp_image_undo_group_end(image)

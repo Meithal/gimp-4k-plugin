@@ -17,6 +17,8 @@ def setup_picture(image, drawable):
         pdb.gimp_message("You shall not use a single layer group as a root for all layers")
         return
 
+    pdb.gimp_image_undo_group_start(image)
+
     if image.height % 12 != 0:
         pdb.gimp_message("Setting the height of the image as a multiple of 12")
         pdb.gimp_image_resize(
@@ -86,11 +88,13 @@ def setup_picture(image, drawable):
             #position the layer group to a 12 position
             xoffset = (layer.offsets[0] % 12) % 12
             yoffset = (layer.offsets[1] % 12) % 12
+            xtotwelve = layer.width % 12
+            ytotwelve = layer.height % 12
             for sublayer in layer.children:
                 pdb.gimp_layer_resize(
                     sublayer,
-                    sublayer.width + xoffset,
-                    sublayer.height + yoffset,
+                    sublayer.width + xoffset + xtotwelve,
+                    sublayer.height + yoffset + ytotwelve,
                     xoffset,
                     yoffset,
                 )
@@ -98,9 +102,11 @@ def setup_picture(image, drawable):
                 pdb.gimp_item_set_visible(sublayer, False)
 
             pdb.gimp_message(
-                "New layer pos after move: ({}, {}), position: ({}, {})".format(
+                "New layer pos after move: ({}, {}) + ({}, {}), position: ({}, {})".format(
                     xoffset,
                     yoffset,
+                    xtotwelve,
+                    ytotwelve,
                     layer.offsets[0],
                     layer.offsets[1]
                 )
@@ -108,7 +114,54 @@ def setup_picture(image, drawable):
 
         pdb.gimp_item_set_visible(layer, False)
 
+    pdb.gimp_image_undo_group_end(image)
+    pdb.gimp_image_undo_group_start(image)
 
+    pdb.gimp_message(
+        "Starting exporting"
+    )
+
+
+    for layer in image.layers:
+
+        pdb.gimp_item_set_visible(layer, True)
+
+        if layer.children:
+            pass
+        else:
+
+            # nimage = gimp.Image(image.width, image.height, RGB)
+            # nlayer = nimage.new_layer()
+            
+            pdb.gimp_edit_copy(layer)
+
+            nimage = pdb.gimp_edit_paste_as_new_image()
+            ndisplay = gimp.Display(nimage)
+            gimp.displays_flush()
+            # floating = pdb.gimp_edit_paste(nlayer)
+
+            # pdb.gimp_sel_floating_anchor(floating)
+
+            # nimage.add_layer(nlayer)
+            # nlayer = layer.copy()
+            # nlayer = gimp.Layer(nimage, layer.name, layer.width, layer.height, RGB_IMAGE, 100, NORMAL_MODE)
+
+
+            # nimage.resize_to_layers()
+
+
+            # ndisplay = pdb.gimp_display_new(nimage)
+            # pdb.plug_in_autocrop(1, nimage, nlayer)
+            # pdb.file_png_save(
+            #     nimage,
+            #     nlayer,
+
+            # )
+
+    pdb.gimp_image_undo_group_end(image)
+
+def open_image_save_and_close():
+    pass
 
 
 register(

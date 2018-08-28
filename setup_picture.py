@@ -40,6 +40,7 @@ def setup_picture(image, drawable):
         )
 
     for layer in image.layers:
+
         if type(layer) is gimp.GroupLayer:
             
             for sublayer in layer.children:
@@ -77,7 +78,7 @@ def setup_picture(image, drawable):
                     - yoffset,
                 )
                 pdb.gimp_message(
-                    "New layer size: ({}, {}), position: ({}, {})".format(
+                    "New group layer size: ({}, {}), position: ({}, {})".format(
                         layer.width,
                         layer.height,
                         layer.offsets[0],
@@ -88,13 +89,11 @@ def setup_picture(image, drawable):
             #position the layer group to a 12 position
             xoffset = (layer.offsets[0] % 12) % 12
             yoffset = (layer.offsets[1] % 12) % 12
-            xtotwelve = layer.width % 12
-            ytotwelve = layer.height % 12
             for sublayer in layer.children:
                 pdb.gimp_layer_resize(
                     sublayer,
-                    sublayer.width + xoffset + xtotwelve,
-                    sublayer.height + yoffset + ytotwelve,
+                    sublayer.width + xoffset,
+                    sublayer.height + yoffset,
                     xoffset,
                     yoffset,
                 )
@@ -102,15 +101,57 @@ def setup_picture(image, drawable):
                 pdb.gimp_item_set_visible(sublayer, False)
 
             pdb.gimp_message(
-                "New layer pos after move: ({}, {}) + ({}, {}), position: ({}, {})".format(
+                "New layer pos after move: ({}, {}), position: ({}, {})".format(
                     xoffset,
                     yoffset,
-                    xtotwelve,
-                    ytotwelve,
                     layer.offsets[0],
                     layer.offsets[1]
                 )
             )
+
+        else:
+            xoffset = layer.offsets[0] % 12
+            yoffset = layer.offsets[1] % 12
+
+            pdb.gimp_message(
+                "Master layer {} padding, ({}, {}) to ({}, {})".format(
+                    layer.name,
+                    layer.width,
+                    layer.height,
+                    layer.width + xoffset,
+                    layer.height + yoffset
+                )
+            )
+
+            # padding
+            pdb.gimp_layer_resize(
+                layer,
+                layer.width + xoffset,
+                layer.height + yoffset,
+                xoffset,
+                yoffset,
+            )
+
+            #size
+            xdifftotwelve = (12 - layer.width % 12) % 12
+            ydifftotwelve = (12 - layer.height % 12) % 12
+            pdb.gimp_layer_resize(
+                layer,
+                layer.width + xdifftotwelve,
+                layer.height + ydifftotwelve,
+                0,
+                0,
+            )
+            pdb.gimp_message(
+                "New layer size: ({}, {}), position: ({}, {})".format(
+                    layer.width,
+                    layer.height,
+                    layer.offsets[0],
+                    layer.offsets[1]
+                )
+            )
+
+
 
         pdb.gimp_item_set_visible(layer, False)
 
